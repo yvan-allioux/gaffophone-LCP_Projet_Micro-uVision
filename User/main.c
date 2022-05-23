@@ -9,6 +9,7 @@ TO DO
 - bouton reset du scor
 - timer pour jouer une melodie
 - TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
+- plusieur fichier
 
 */
 //===========================================================//
@@ -73,7 +74,7 @@ void initPinConnectBloc()//----------------------------PIN CONNECT----
 	LPC_PINCON->PINSEL2 = 0; // PINSEL mais du buzer 2 car c'est comme ça dans la doc, activation du pinsel
 	LPC_PINCON->PINMODE0 = 0;
 
-	//Initialisation des registres
+	//Initialisation des registres pour modifier le Pin Connect Block
 	PINSEL_ConfigPin(&pinLed);//led
 	PINSEL_ConfigPin(&pinBuz);//buz
 	
@@ -224,13 +225,13 @@ uint16_t i2c_eeprom_write(uint16_t addr, uint8_t* data, int length)
 	//i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));
 	
 	int i;
-	uint8_t data_to_write[255];
-	I2C_M_SETUP_Type config; // config I2C
+	uint8_t data_to_write[255];//tableau que on va envoyer pour l'ecriture case de taille 8bit
+	I2C_M_SETUP_Type config; // config I2C initialisation de la structure pour la configuration
 	
-	// 0101 | addr >> 8 pour ne récupérer que les 3 bits de poids fort de l'adresse de mémoire
-	config.sl_addr7bit = 0x50 | (addr >> 8); 
+	// 0101 | adresseFlash >> 8 pour ne récupérer que les 3 bits de poids fort de l'adresse de mémoire
+	config.sl_addr7bit = 0x50 | (addr >> 8); //0x50 = 1010000 en bianire, on decal de 8 (pour avoir les 4bit de pois for) pour avoir le bit de pois faible a 0 ou 1 qui est automatiquement mis si ecriture ou lecture
 
-	data_to_write[0] = ((addr) & (0xFF)); // Récupération des lignes de la mémoire à transmettre dans les données
+	data_to_write[0] = ((addr) & (0xFF)); // Récupération des lignes de la mémoire à transmettre dans les données, recuperation des bit de pois faible et mise dans la premiere case du tableau
 	for(i=0; i < length; i++)
 	{
 		data_to_write[i+1] = data[i]; // Récupération des données à écrire
