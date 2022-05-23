@@ -8,9 +8,8 @@
 TO DO
 - bouton reset du scor
 - timer pour jouer une melodie
+- TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
 
-NOTE POUR LORAL
-- note de misique non bloquante grace a l'interuption
 */
 //===========================================================//
 /**
@@ -196,6 +195,7 @@ void init_i2c(void){
 //LECTURE DE LA MEMOIRE
 void i2c_eeprom_read(uint16_t addr, uint8_t* data, int length)
 {
+	//i2c_eeprom_read(0, &varMemoire, sizeof(varMemoire));
 	
 	I2C_M_SETUP_Type config; // config I2C
 	uint8_t addr_ligne = addr & 0xFF;
@@ -221,6 +221,8 @@ void i2c_eeprom_read(uint16_t addr, uint8_t* data, int length)
 //ECRITURE DANS LA MEMOIRE
 uint16_t i2c_eeprom_write(uint16_t addr, uint8_t* data, int length)
 {
+	//i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));
+	
 	int i;
 	uint8_t data_to_write[255];
 	I2C_M_SETUP_Type config; // config I2C
@@ -281,91 +283,91 @@ void uneMusique(){
 //===========================================================//
 int main(void)
 {	  
-	//variable de test pour vérifier que on touche bien et pas juste un bug du tactil il fau cliquer countTactilCouleur de fois ... 10
-	int countTactilJaune;
-	int countTactilVert;
-	int countTactilBleu;
-	int countTactilRouge;
-	int countTactilViolet;
-	int countTactilJauneLoad;
-	int countTactilReset;
-	
-	int selectTactil;//variable qui permet de savoir quelle section du tactil est selectionée
-	
-	int n;
+		//variable de test pour vérifier que on touche bien et pas juste un bug du tactil il fau cliquer countTactilCouleur de fois ... 10
+		int countTactilJaune;
+		int countTactilVert;
+		int countTactilBleu;
+		int countTactilRouge;
+		int countTactilViolet;
+		int countTactilJauneLoad;
+		int countTactilReset;
 
-	uint8_t varMemoire = 0;//variable qui compte le nombre de notte enclanchèe , utulisée avec la memoire flash
+		int selectTactil;//variable qui permet de savoir quelle section du tactil est selectionée
 
-	
-	selectTactil = 0;
+		int n;
 
-	countTactilJaune = 0;
-	countTactilVert = 0;
-	countTactilBleu = 0;
-	countTactilRouge = 0;
-	countTactilViolet = 0;
-	countTactilJauneLoad = 0;
-	countTactilReset = 0;
-	
-
-	initPinConnectBloc();//initialisation gpio pin conecteur bloc ...
-	initTimer(); //initialisation du timer 0
-	
-
-	init_i2c();
+		uint8_t varMemoire = 0;//variable qui compte le nombre de notte enclanchèe , utulisée avec la memoire flash
 
 
-	
-	TIM_UpdateMatchValue(LPC_TIM0,0,30);
-	  // Init(); // init variables globales et pinsel pour IR => à faire 
-	  lcd_Initializtion(); // init pinsel ecran et init LCD
-		// affichage sur l'écran d'un exemple de 4 carrés de couleur et d'une chaine de caractère
-	  n=sprintf(chaine,"gaffophone V0.47 yvan");
-	  LCD_write_english_string (32,30,chaine,White,Blue);
-		
-		//save care
+		selectTactil = 0;
+
+		countTactilJaune = 0;
+		countTactilVert = 0;
+		countTactilBleu = 0;
+		countTactilRouge = 0;
+		countTactilViolet = 0;
+		countTactilJauneLoad = 0;
+		countTactilReset = 0;
+
+
+		initPinConnectBloc();//initialisation gpio pin conecteur bloc ...
+		initTimer(); //initialisation du timer 0
+
+		TIM_UpdateMatchValue(LPC_TIM0,0,30);//modification du match value du timer 0 a la volée pour changer la fréquence de la musique
+
+		init_i2c();//initialisation de l'i2c
+
+		lcd_Initializtion(); // init pinsel ecran et init LCD
+
+		//titre
+		n=sprintf(chaine,"gaffophone V0.47 yvan");
+		LCD_write_english_string (32,30,chaine,White,Blue);
+
+		//save caré
 		dessiner_rect(0,0,30,30,2,1,Black,Magenta);
 		dessiner_rect(7,0,15,15,2,1,Black,White);
 		dessiner_rect(9,19,10,5,2,1,Black,Black);
 		n=sprintf(chaine,"save");
 		LCD_write_english_string (35,7,chaine,Black,Blue);
-		
-		//load care
+
+		//load caré
 		dessiner_rect(0+210,0,30,30,2,1,Black,Yellow);
 		dessiner_rect(7+210,0,15,15,2,1,Black,White);
 		dessiner_rect(9+210,19,10,5,2,1,Black,Black);
 		n=sprintf(chaine,"load");
 		LCD_write_english_string (175,7,chaine,Black,Blue);
-		
-		//carée
-	  dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
+
+		//carée touche de musique 
+		dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
 		n=sprintf(chaine,"DO");
-	  LCD_write_english_string (60,110,chaine,Black,Cyan);
-		
+		LCD_write_english_string (60,110,chaine,Black,Cyan);
+
 		dessiner_rect(120,60,110,110,2,1,Black,Cyan);//RE
 		n=sprintf(chaine,"RE");
-	  LCD_write_english_string (170,110,chaine,Black,Cyan);
-		
-	  dessiner_rect(10,170,110,110,2,1,Black,Cyan);//MI
-		n=sprintf(chaine,"MI");
-	  LCD_write_english_string (60,210,chaine,Black,Cyan);
-		
-	  dessiner_rect(120,170,110,110,2,1,Black,Cyan);//FA
-		n=sprintf(chaine,"FA");
-	  LCD_write_english_string (170,210,chaine,Black,Cyan);
+		LCD_write_english_string (170,110,chaine,Black,Cyan);
 
-	  touch_init(); // init pinsel tactile et init tactile; à ne laisser que si vous utilisez le tactile
+		dessiner_rect(10,170,110,110,2,1,Black,Cyan);//MI
+		n=sprintf(chaine,"MI");
+		LCD_write_english_string (60,210,chaine,Black,Cyan);
+
+		dessiner_rect(120,170,110,110,2,1,Black,Cyan);//FA
+		n=sprintf(chaine,"FA");
+		LCD_write_english_string (170,210,chaine,Black,Cyan);
+
+		touch_init(); //initialisation du tactil
+
 		
-		//on stop le bruir en metant une periode très longue (pas propre comme methode mais bon ...)
-		TIM_ResetCounter(LPC_TIM0);
-		TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
-		
-	  GPIO_SetDir(0, (1<<0), 0); //la led est eteinte quand linitialisation est terminer
+		TIM_ResetCounter(LPC_TIM0);//reset du timer car si on ne le fais pas et que on diminue la taille du match value cela peut faire crash le timer
+		TIM_UpdateMatchValue(LPC_TIM0,0,100000000);//on stop le bruir en metant une periode très longue (pas propre comme methode mais bon ...)
+
+		GPIO_SetDir(0, (1<<0), 0); //la led est eteinte quand linitialisation est terminer
 		
     while(1){
 
 			
-			touch_read();
+			touch_read();//actialisation des valeur du tactil
+			
+			//boucle pour detecter quelle zonze est touchée
 			if(((touch_x > 600) && (touch_x < 2000)) && ((touch_y > 2000) && (touch_y < 3000))){//jaune
 				countTactilJaune++;
 				if(selectTactil != 10 && countTactilJaune > countTactilCouleur){
@@ -488,6 +490,7 @@ int main(void)
 					
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
+					
 					selectTactil = 0;
 					countTactilJaune = 0;
 					countTactilVert = 0;

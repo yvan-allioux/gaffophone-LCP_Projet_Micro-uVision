@@ -906,13 +906,13 @@ Image component sizes
        256          4          0          0          0       4277   lpc17xx_pinsel.o
       1744         80          0          0          0      11780   lpc17xx_ssp.o
       1668         94          0          0          0       9395   lpc17xx_timer.o
-      2468        122          0          4         30      20165   main.o
+      2468        122          0          4         30      20141   main.o
         64         26        204          0        512       1208   startup_lpc17xx.o
        640         32          0          4          0      22861   system_lpc17xx.o
        984         36          0          0         24       2778   touch_panel.o
 
     ----------------------------------------------------------------------
-     15684        646       1772         16        616     142742   Object Totals
+     15684        646       1772         16        616     142718   Object Totals
          0          0         48          0          0          0   (incl. Generated)
          4          0          0          2          2          0   (incl. Padding)
 
@@ -973,8 +973,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     17016        694       1792         16        712     142506   Grand Totals
-     17016        694       1792         16        712     142506   ELF Image Totals
+     17016        694       1792         16        712     142482   Grand Totals
+     17016        694       1792         16        712     142482   ELF Image Totals
      17016        694       1792         16          0          0   ROM Totals
 
 ==============================================================================
