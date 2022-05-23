@@ -1,7 +1,4 @@
 SET PATH=C:\Keil_v5\ARM\ARMCC\Bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Program Files\MiKTeX\miktex\bin\x64\;C:\Users\yvan\AppData\Local\Microsoft\WindowsApps;C:\Users\yvan\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\yvan\AppData\Local\GitHubDesktop\bin
-SET ARMCC5_ASMOPT=--diag_suppress=9931
-SET ARMCC5_CCOPT=--diag_suppress=9931
-SET ARMCC5_LINKOPT=--diag_suppress=9931
 SET CPU_TYPE=LPC1768
 SET CPU_VENDOR=NXP
 SET UV2_TARGET=Open1786
