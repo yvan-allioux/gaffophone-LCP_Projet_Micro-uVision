@@ -302,7 +302,7 @@ void uneMusique(){
 int main(void)
 {	  
 	int n;
-	uint8_t varMemoire = 42;
+	uint8_t varMemoire = 0;
 	uint8_t varMemoireLecture = 0;
 
 	
@@ -315,6 +315,7 @@ int main(void)
 	countTactilVert = 0;
 	countTactilBleu = 0;
 	countTactilRouge = 0;
+	countTactilViolet = 0;
 	
 
 	initPinConnectBloc();
@@ -322,8 +323,8 @@ int main(void)
 	
 
 	init_i2c();
-	i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));
-	i2c_eeprom_read(0, &varMemoireLecture, sizeof(varMemoireLecture));
+	//i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));
+	//i2c_eeprom_read(0, &varMemoire, sizeof(varMemoireLecture));
 
 	
 	TIM_UpdateMatchValue(LPC_TIM0,0,30);
@@ -333,6 +334,15 @@ int main(void)
 	  n=sprintf(chaine,"gaffophone V0.47 yvan");
 	  LCD_write_english_string (32,30,chaine,White,Blue);
 		
+		//save care
+		dessiner_rect(0,0,30,30,2,1,Black,Magenta);
+		dessiner_rect(7,0,15,15,2,1,Black,White);
+		dessiner_rect(9,19,10,5,2,1,Black,Black);
+		
+		//load care
+		dessiner_rect(0+210,0,30,30,2,1,Black,Yellow);
+		dessiner_rect(7+210,0,15,15,2,1,Black,White);
+		dessiner_rect(9+210,19,10,5,2,1,Black,Black);
 		//carée
 	  dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
 		n=sprintf(chaine,"DO");
@@ -349,9 +359,6 @@ int main(void)
 	  dessiner_rect(120,170,110,110,2,1,Black,Cyan);//FA
 		n=sprintf(chaine,"FA");
 	  LCD_write_english_string (170,210,chaine,Black,Cyan);
-		
-		//dessiner_rect(60,100,4,4,0,1,Black,Black);//TEST A SUPRIMER
-		//dessiner_rect(65,100,4,4,0,1,Red,Red);//TEST A SUPRIMER
 
 	  touch_init(); // init pinsel tactile et init tactile; à ne laisser que si vous utilisez le tactile
 		
@@ -372,7 +379,6 @@ int main(void)
 					demiPeriodeGlobale = 10;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,22);//DO
-					GPIO_SetDir(0, (1<<0), 1);
 					countTactilJaune = 0;
 					
 					dessiner_rect(10,60,110,110,2,1,Black,Blue2);
@@ -418,6 +424,22 @@ int main(void)
 					n=sprintf(chaine,"FA");
 					LCD_write_english_string (170,210,chaine,Black,Blue2);
 				}
+			}else if(((touch_x > 100) && (touch_x < 800)) && ((touch_y > 3300) && (touch_y < 3800))){//VIOLET
+				countTactilViolet++;
+				if(demiPeriodeGlobale != 60 && countTactilViolet > countTactilCouleur){
+					GPIO_SetDir(0, (1<<0), 1);
+					demiPeriodeGlobale = 60;
+					countTactilViolet = 0;
+					i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));//ECRITURE EN MEMOIRE SAUVEGARDE
+				}
+			}else if(((touch_x > 3300) && (touch_x < 3900)) && ((touch_y > 3300) && (touch_y < 3800))){//JAUNE
+				countTactilJaune++;
+				if(demiPeriodeGlobale != 70 && countTactilJaune > countTactilCouleur){
+					GPIO_SetDir(0, (1<<0), 1);
+					demiPeriodeGlobale = 70;
+					countTactilJaune = 0;
+					i2c_eeprom_read(0, &varMemoire, sizeof(varMemoire));//LECTURE EN MEMOIRE
+				}
 			}else{
 				if(demiPeriodeGlobale != 50){//pour ne passer que 1 fois ici quand on ne touche pas l'ecrant (detecte le levée de doit en gros)
 					switch(demiPeriodeGlobale)//pour ne reaficher la couleur originale que d'un carée
@@ -426,29 +448,32 @@ int main(void)
 						dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
 						n=sprintf(chaine,"DO");
 						LCD_write_english_string (60,110,chaine,Black,Cyan);
+					varMemoire++;
 						break;
 					case 20:
 						dessiner_rect(120,60,110,110,2,1,Black,Cyan);//RE
 						n=sprintf(chaine,"RE");
 						LCD_write_english_string (170,110,chaine,Black,Cyan);
+					varMemoire++;
 						break;
 					case 30:
 						dessiner_rect(10,170,110,110,2,1,Black,Cyan);//MI
 						n=sprintf(chaine,"MI");
 						LCD_write_english_string (60,210,chaine,Black,Cyan);
+					varMemoire++;
 						break;
 					case 40:
 						dessiner_rect(120,170,110,110,2,1,Black,Cyan);//FA
 						n=sprintf(chaine,"FA");
 						LCD_write_english_string (170,210,chaine,Black,Cyan);
+					varMemoire++;
 						break;
 					default:
 						//rien
 						break;
 					}
 					
-					//i2c_eeprom_read(0, &varMemoireLecture, sizeof(varMemoire));
-					n=sprintf(chaine,"nb de note %d", varMemoireLecture);
+					n=sprintf(chaine,"nb de note %d", varMemoire);
 					LCD_write_english_string (60,290,chaine,Black,Blue);
 					
 					TIM_ResetCounter(LPC_TIM0);
@@ -458,7 +483,11 @@ int main(void)
 					countTactilVert = 0;
 					countTactilBleu = 0;
 					countTactilRouge = 0;
+					countTactilViolet = 0;
+					countTactilJaune = 0;
 					demiPeriodeGlobale = 50;
+					
+					GPIO_SetDir(0, (1<<0), 0);
 				}//fin detection lever doit de lecrant
 				
 				

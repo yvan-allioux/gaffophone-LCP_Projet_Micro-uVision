@@ -13,4 +13,6 @@ int countTactilJaune;
 int countTactilVert;
 int countTactilBleu;
 int countTactilRouge;
+int countTactilViolet;
+int countTactilJaune;
 
