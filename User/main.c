@@ -6,7 +6,8 @@
 // Build Environment   : Keil µVision
 /*
 TO DO
-
+- bouton reset du scor
+- timer pour jouer une melodie
 
 NOTE POUR LORAL
 - note de misique non bloquante grace a l'interuption
@@ -43,51 +44,42 @@ NOTE POUR LORAL
 //INITIALISATION DU PIN CONECTEUR BLOCK (gpip pinsel ...)
 void initPinConnectBloc()//----------------------------PIN CONNECT----
 {
-	/**
-	 * Déclaration des structures
-	 */
+	//Déclaration des structures
+	
 	// declaration des structures de configuration
 	PINSEL_CFG_Type pinLed; //initialisation d'une structure cette var a le nom pin
-	PINSEL_CFG_Type pinBuz;
+	PINSEL_CFG_Type pinBuz; //pour le buzer
 		
-	/**
-	 * 	Initialisation des informations de la Pin0.0 GPIO
-		*	PINSEL_CFG_Type a des valeur 
-	 */
 
+	//Initialisation des informations de la Pin0.0 GPIO LED
+	//PINSEL_CFG_Type a des valeur
 	pinLed.Portnum = 0;
 	pinLed.Pinnum = 0;
 	pinLed.Funcnum = 0;
 	pinLed.Pinmode = 0;
 	pinLed.OpenDrain = 0;
 
-	LPC_PINCON->PINSEL0 = 0; //?
+	LPC_PINCON->PINSEL0 = 0; //congiguration du PINSEL
 	LPC_PINCON->PINMODE0 = 0;
 	
-	/**
-	 * 	Initialisation des informations de la Pin1.9 GPIO
-		*	PINSEL_CFG_Type a des valeur 
-	 */
 
+	//Initialisation des informations de la Pin1.9 GPIO BUZ
+	//PINSEL_CFG_Type a des valeur 
 	pinBuz.Portnum = 1;
 	pinBuz.Pinnum = 9;
 	pinBuz.Funcnum = 0;
 	pinBuz.Pinmode = 0;
 	pinBuz.OpenDrain = 0;
 
-	LPC_PINCON->PINSEL2 = 0;
+	LPC_PINCON->PINSEL2 = 0; // PINSEL mais du buzer 2 car c'est comme ça dans la doc, activation du pinsel
 	LPC_PINCON->PINMODE0 = 0;
 
-	/*
-	 * Initialisation des registres
-	 */
-	 
-	PINSEL_ConfigPin(&pinLed);
+	//Initialisation des registres
+	PINSEL_ConfigPin(&pinLed);//led
+	PINSEL_ConfigPin(&pinBuz);//buz
 	
-	PINSEL_ConfigPin(&pinBuz);
-	
-	// Configuration du PIN Connect Block pour la mémoire
-	LPC_PINCON->PINSEL1 |= (1 << 22);
+	//Configuration du PIN Connect Block pour la mémoire
+	LPC_PINCON->PINSEL1 |= (1 << 22); //on fais un declage de 22 à gauche 			000 0001 << 2 == 0000 0100
 	LPC_PINCON->PINSEL1 |= (1 << 24);
 	
 	// Led en sortie du GPIO
@@ -184,7 +176,7 @@ void initTimer()
 //FONCTION APELE LOR DUNE INTERUPTION
 	void TIMER0_IRQHandler ()
 	{
-		if ( (GPIO_ReadValue(1)& (1<<9)) == 0 ){
+		if ( (GPIO_ReadValue(1)& (1<<9)) == 0 ){//si gpio du buzer est a 1 l'etindre sinon l'alumer...
 				GPIO_SetValue(1, (1<<9));
 		}else{
 				GPIO_ClearValue(1, (1<<9));
@@ -254,6 +246,7 @@ uint16_t i2c_eeprom_write(uint16_t addr, uint8_t* data, int length)
 	
 }
 //JOUER UNE MUSIQUE
+/*
 void uneMusique(){
 	int n;
 	//desactivation touch_read
@@ -281,31 +274,30 @@ void uneMusique(){
 	LCD_write_english_string (170,110,chaine,Black,Cyan);
 	
 }
+*/
 
 //===========================================================//
 // Function: Main
 //===========================================================//
 int main(void)
 {	  
-	
+	//variable de test pour vérifier que on touche bien et pas juste un bug du tactil il fau cliquer countTactilCouleur de fois ... 10
 	int countTactilJaune;
 	int countTactilVert;
 	int countTactilBleu;
 	int countTactilRouge;
 	int countTactilViolet;
 	int countTactilJauneLoad;
-	int demiPeriodeGlobale;
+	int countTactilReset;
+	
+	int selectTactil;//variable qui permet de savoir quelle section du tactil est selectionée
 	
 	int n;
 
-	uint8_t varMemoire = 0;
-	uint8_t varMemoireLecture = 0;
+	uint8_t varMemoire = 0;//variable qui compte le nombre de notte enclanchèe , utulisée avec la memoire flash
 
 	
-	//variable pour coriger et controler la modification du match avec le tactil
-	//BUG DU MATCH VALUE : quand on change le match value parfois cela bloque le timer, aprèes de longue investigation il ce pourais que ce sois le passag a match value plus petit que actuel
-	
-	demiPeriodeGlobale = 0;//var pour n'avoir que 1 etat par interaction dans les boucle
+	selectTactil = 0;
 
 	countTactilJaune = 0;
 	countTactilVert = 0;
@@ -313,15 +305,15 @@ int main(void)
 	countTactilRouge = 0;
 	countTactilViolet = 0;
 	countTactilJauneLoad = 0;
+	countTactilReset = 0;
 	
 
-	initPinConnectBloc();
-	initTimer();
+	initPinConnectBloc();//initialisation gpio pin conecteur bloc ...
+	initTimer(); //initialisation du timer 0
 	
 
 	init_i2c();
-	//i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));
-	//i2c_eeprom_read(0, &varMemoire, sizeof(varMemoireLecture));
+
 
 	
 	TIM_UpdateMatchValue(LPC_TIM0,0,30);
@@ -376,9 +368,9 @@ int main(void)
 			touch_read();
 			if(((touch_x > 600) && (touch_x < 2000)) && ((touch_y > 2000) && (touch_y < 3000))){//jaune
 				countTactilJaune++;
-				if(demiPeriodeGlobale != 10 && countTactilJaune > countTactilCouleur){
+				if(selectTactil != 10 && countTactilJaune > countTactilCouleur){
 					
-					demiPeriodeGlobale = 10;
+					selectTactil = 10;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,22);//DO
 					countTactilJaune = 0;
@@ -389,9 +381,9 @@ int main(void)
 				}
 			}else if(((touch_x > 2100) && (touch_x < 3600)) && ((touch_y > 2000) && (touch_y < 3000))){//vert
 				countTactilVert++;
-				if(demiPeriodeGlobale != 20 && countTactilVert > countTactilCouleur){
+				if(selectTactil != 20 && countTactilVert > countTactilCouleur){
 					
-					demiPeriodeGlobale = 20;
+					selectTactil = 20;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,21);//RE
 					countTactilVert = 0;
@@ -402,9 +394,9 @@ int main(void)
 				}
 			}else if(((touch_x > 600) && (touch_x < 2000)) && ((touch_y > 700) && (touch_y < 1800))){//bleu
 				countTactilBleu++;
-				if(demiPeriodeGlobale != 30 && countTactilBleu > countTactilCouleur){
+				if(selectTactil != 30 && countTactilBleu > countTactilCouleur){
 					
-					demiPeriodeGlobale = 30;
+					selectTactil = 30;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,20);//MI
 					countTactilBleu = 0;
@@ -415,9 +407,9 @@ int main(void)
 				}
 			}else if(((touch_x > 2100) && (touch_x < 3600)) && ((touch_y > 700) && (touch_y < 1800))){//rouge
 				countTactilRouge++;
-				if(demiPeriodeGlobale != 40 && countTactilRouge > countTactilCouleur){
+				if(selectTactil != 40 && countTactilRouge > countTactilCouleur){
 					
-					demiPeriodeGlobale = 40;
+					selectTactil = 40;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,18);//FA
 					countTactilRouge = 0;
@@ -428,25 +420,33 @@ int main(void)
 				}
 			}else if(((touch_x > 100) && (touch_x < 800)) && ((touch_y > 3300) && (touch_y < 3800))){//VIOLET
 				countTactilViolet++;
-				if(demiPeriodeGlobale != 60 && countTactilViolet > countTactilCouleur){
+				if(selectTactil != 60 && countTactilViolet > countTactilCouleur){
 					GPIO_SetDir(0, (1<<0), 1);
-					demiPeriodeGlobale = 60;
+					selectTactil = 60;
 					countTactilViolet = 0;
 					i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));//ECRITURE EN MEMOIRE SAUVEGARDE
 					dessiner_rect(7,0,15,15,2,1,Black,Red);
 				}
 			}else if(((touch_x > 3300) && (touch_x < 3900)) && ((touch_y > 3300) && (touch_y < 3800))){//JAUNE_LOAD
 				countTactilJauneLoad++;
-				if(demiPeriodeGlobale != 70 && countTactilJauneLoad > countTactilCouleur){
+				if(selectTactil != 70 && countTactilJauneLoad > countTactilCouleur){
 					GPIO_SetDir(0, (1<<0), 1);
-					demiPeriodeGlobale = 70;
+					selectTactil = 70;
 					countTactilJauneLoad = 0;
 					i2c_eeprom_read(0, &varMemoire, sizeof(varMemoire));//LECTURE EN MEMOIRE
 					dessiner_rect(7+210,0,15,15,2,1,Black,Red);
 				}
+			}else if((touch_y > 100) && (touch_y < 490)){//RESET
+				countTactilReset++;
+				if(selectTactil != 80 && countTactilReset > countTactilCouleur){
+					GPIO_SetDir(0, (1<<0), 1);
+					selectTactil = 80;
+					countTactilReset = 0;
+					varMemoire = 0;//reset du compteur
+				}
 			}else{
-				if(demiPeriodeGlobale != 50){//pour ne passer que 1 fois ici quand on ne touche pas l'ecrant (detecte le levée de doit en gros)
-					switch(demiPeriodeGlobale)//pour ne reaficher la couleur originale que d'un carée
+				if(selectTactil != 50){//pour ne passer que 1 fois ici quand on ne touche pas l'ecrant (detecte le levée de doit en gros)
+					switch(selectTactil)//pour ne reaficher la couleur originale que d'un carée
 					{
 					case 10:
 						dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
@@ -488,14 +488,14 @@ int main(void)
 					
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
-					demiPeriodeGlobale = 0;
+					selectTactil = 0;
 					countTactilJaune = 0;
 					countTactilVert = 0;
 					countTactilBleu = 0;
 					countTactilRouge = 0;
 					countTactilViolet = 0;
 					countTactilJauneLoad = 0;
-					demiPeriodeGlobale = 50;
+					selectTactil = 50;
 					
 					GPIO_SetDir(0, (1<<0), 0);
 
