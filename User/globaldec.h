@@ -5,14 +5,8 @@
 // mettez ici toutes les déclarations de variables globales
 
 char chaine[30]; // buffer pour l'affichage sur le LCD
-int demiPeriodeGlobale;
 uint16_t touch_x, touch_y ;
 
 //pas propre de les metre en var global mais quand on initialise dans le main cela fais une erreur "ne peut pas localiser les fichier ... lors du transfert sur la carte)
-int countTactilJaune;
-int countTactilVert;
-int countTactilBleu;
-int countTactilRouge;
-int countTactilViolet;
-int countTactilJaune;
+
 

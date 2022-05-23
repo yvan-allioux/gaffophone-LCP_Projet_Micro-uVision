@@ -39,6 +39,7 @@ NOTE POUR LORAL
 #include "lpc17xx_i2c.h"
 
 
+
 //INITIALISATION DU PIN CONECTEUR BLOCK (gpip pinsel ...)
 void initPinConnectBloc()//----------------------------PIN CONNECT----
 {
@@ -68,11 +69,11 @@ void initPinConnectBloc()//----------------------------PIN CONNECT----
 		*	PINSEL_CFG_Type a des valeur 
 	 */
 
-	pinLed.Portnum = 1;
-	pinLed.Pinnum = 9;
-	pinLed.Funcnum = 0;
-	pinLed.Pinmode = 0;
-	pinLed.OpenDrain = 0;
+	pinBuz.Portnum = 1;
+	pinBuz.Pinnum = 9;
+	pinBuz.Funcnum = 0;
+	pinBuz.Pinmode = 0;
+	pinBuz.OpenDrain = 0;
 
 	LPC_PINCON->PINSEL2 = 0;
 	LPC_PINCON->PINMODE0 = 0;
@@ -83,7 +84,7 @@ void initPinConnectBloc()//----------------------------PIN CONNECT----
 	 
 	PINSEL_ConfigPin(&pinLed);
 	
-	PINSEL_ConfigPin(&pinLed);
+	PINSEL_ConfigPin(&pinBuz);
 	
 	// Configuration du PIN Connect Block pour la mémoire
 	LPC_PINCON->PINSEL1 |= (1 << 22);
@@ -101,20 +102,16 @@ void initPinConnectBloc()//----------------------------PIN CONNECT----
 //INITIALISATION DU TIMER
 void initTimer()
 {
-	/**
-	 * Déclaration des structures
-	 */
 
-	// TP : Timer Precision, pour timer mode et precision
+	//-----Déclaration des structures
+
+	//TP : Timer Precision, pour timer mode et precision
 	TIM_TIMERCFG_Type timer;
-
 	// TM : Timer Match, pour timer match
 	TIM_MATCHCFG_Type match;
 	
-	
-	/**
-	 * Initialisation des du mode timer et de la précision du timer
-	 */
+
+	//-----Initialisation des du mode timer et de la précision du timer
 	
 	// 0 ou 1 (type enum)
 	timer.PrescaleOption = TIM_PRESCALE_USVAL; 
@@ -125,18 +122,13 @@ void initTimer()
 	// Initialisation des registres
 	TIM_Init(LPC_TIM0,TIM_TIMER_MODE,&timer);
 	
-	// Prescal Register : PR = 250000 c'est la fréquence 
-	//LPC_TIM0->PR = 250000; // précision 10ms   suprimer car on a PrescaleValue qui fais la meme chose
 	
-	/**
-	 * Initialisation des actions à suivre lors d'un match
-	 */
-	
-	// utilisation du MR0
+	//-----Initialisation des actions à suivre lors d'un match
+	 
+	// utilisation du registre MR0
 	match.MatchChannel = 0;
 	
 	// temps d'une demi-période
-	//match.MatchValue = 50; // 50*10ms = 500ms = 0.5s, 50 pour la led
 	match.MatchValue = demie_periode;
 	
 	// interruption à chaque match = actif
@@ -152,19 +144,13 @@ void initTimer()
 	match.ExtMatchOutputType = TIM_EXTMATCH_TOGGLE;
 	//match.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
 	
-	
-	/**
-	 * Application de la configuration du match
-	 */
-	 
+	//Application de la configuration du match
 	TIM_ConfigMatch(LPC_TIM0, &match);
 	
 	// Autorisation NVIC d'interruption du traitant "TIMER0_IRQn"
 	NVIC_EnableIRQ(TIMER0_IRQn);
-	
-	/**
-	 * Lancement du timer
-	 */
+	 
+	//-----Lancement du timer
 	 
 	TIM_Cmd(LPC_TIM0, ENABLE);
 	
@@ -174,9 +160,9 @@ void initTimer()
 
 
 //INITIALISATION DU TIMER POUR LA MUSIQUE
-void initTimerMusique()
+/*void initTimerMusique()
 {
-	/*
+	
 	TIM_TIMERCFG_Type timerMusique;
 	TIM_MATCHCFG_Type matchMusique;
 	timerMusique.PrescaleOption = TIM_PRESCALE_USVAL; 
@@ -191,9 +177,9 @@ void initTimerMusique()
 	TIM_ConfigMatch(LPC_TIM1, &matchMusique);
 	NVIC_EnableIRQ(TIMER0_IRQn);
 	TIM_Cmd(LPC_TIM1, ENABLE);
-	*/
+	
 	return;
-}
+}*/
 
 //FONCTION APELE LOR DUNE INTERUPTION
 	void TIMER0_IRQHandler ()
@@ -301,7 +287,17 @@ void uneMusique(){
 //===========================================================//
 int main(void)
 {	  
+	
+	int countTactilJaune;
+	int countTactilVert;
+	int countTactilBleu;
+	int countTactilRouge;
+	int countTactilViolet;
+	int countTactilJauneLoad;
+	int demiPeriodeGlobale;
+	
 	int n;
+
 	uint8_t varMemoire = 0;
 	uint8_t varMemoireLecture = 0;
 
@@ -316,6 +312,7 @@ int main(void)
 	countTactilBleu = 0;
 	countTactilRouge = 0;
 	countTactilViolet = 0;
+	countTactilJauneLoad = 0;
 	
 
 	initPinConnectBloc();
@@ -338,11 +335,16 @@ int main(void)
 		dessiner_rect(0,0,30,30,2,1,Black,Magenta);
 		dessiner_rect(7,0,15,15,2,1,Black,White);
 		dessiner_rect(9,19,10,5,2,1,Black,Black);
+		n=sprintf(chaine,"save");
+		LCD_write_english_string (35,7,chaine,Black,Blue);
 		
 		//load care
 		dessiner_rect(0+210,0,30,30,2,1,Black,Yellow);
 		dessiner_rect(7+210,0,15,15,2,1,Black,White);
 		dessiner_rect(9+210,19,10,5,2,1,Black,Black);
+		n=sprintf(chaine,"load");
+		LCD_write_english_string (175,7,chaine,Black,Blue);
+		
 		//carée
 	  dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
 		n=sprintf(chaine,"DO");
@@ -431,14 +433,16 @@ int main(void)
 					demiPeriodeGlobale = 60;
 					countTactilViolet = 0;
 					i2c_eeprom_write(0, &varMemoire, sizeof(varMemoire));//ECRITURE EN MEMOIRE SAUVEGARDE
+					dessiner_rect(7,0,15,15,2,1,Black,Red);
 				}
-			}else if(((touch_x > 3300) && (touch_x < 3900)) && ((touch_y > 3300) && (touch_y < 3800))){//JAUNE
-				countTactilJaune++;
-				if(demiPeriodeGlobale != 70 && countTactilJaune > countTactilCouleur){
+			}else if(((touch_x > 3300) && (touch_x < 3900)) && ((touch_y > 3300) && (touch_y < 3800))){//JAUNE_LOAD
+				countTactilJauneLoad++;
+				if(demiPeriodeGlobale != 70 && countTactilJauneLoad > countTactilCouleur){
 					GPIO_SetDir(0, (1<<0), 1);
 					demiPeriodeGlobale = 70;
-					countTactilJaune = 0;
+					countTactilJauneLoad = 0;
 					i2c_eeprom_read(0, &varMemoire, sizeof(varMemoire));//LECTURE EN MEMOIRE
+					dessiner_rect(7+210,0,15,15,2,1,Black,Red);
 				}
 			}else{
 				if(demiPeriodeGlobale != 50){//pour ne passer que 1 fois ici quand on ne touche pas l'ecrant (detecte le levée de doit en gros)
@@ -468,12 +472,18 @@ int main(void)
 						LCD_write_english_string (170,210,chaine,Black,Cyan);
 					varMemoire++;
 						break;
+					case 60://violet
+						dessiner_rect(7,0,15,15,2,1,Black,White);
+						break;
+					case 70://jaune load
+						dessiner_rect(7+210,0,15,15,2,1,Black,White);
+						break;
 					default:
 						//rien
 						break;
 					}
 					
-					n=sprintf(chaine,"nb de note %d", varMemoire);
+					n=sprintf(chaine,"nb de note %d  ", varMemoire);
 					LCD_write_english_string (60,290,chaine,Black,Blue);
 					
 					TIM_ResetCounter(LPC_TIM0);
@@ -484,10 +494,11 @@ int main(void)
 					countTactilBleu = 0;
 					countTactilRouge = 0;
 					countTactilViolet = 0;
-					countTactilJaune = 0;
+					countTactilJauneLoad = 0;
 					demiPeriodeGlobale = 50;
 					
 					GPIO_SetDir(0, (1<<0), 0);
+
 				}//fin detection lever doit de lecrant
 				
 				
