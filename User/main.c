@@ -512,7 +512,7 @@ int main(void)
 					uneMusique(300,20);
 					uneMusique(500,10);
 					
-					for (i = 0; i < 10; ++i){
+					for (i = 0; i < 11; ++i){
 							tabVerif[i] = 0;
 					}
 					
