@@ -312,8 +312,8 @@ int main(void)
 
 		int selectTactil;//variable qui permet de savoir quelle section du tactil est selectionée
 
-		int tabVerif[11] = {0,0,0,0,0,0,0,0,0,0,0};
-		int clerDeLaLune[11] = {10,10,10,20,30,20,10,30,20,20,10};
+		int tabVerif[11] = {0,0,0,0,0,0,0,0,0,0,0};// tableau pour enregistrer les frape de l'utilisateurs
+		int clerDeLaLune[11] = {10,10,10,20,30,20,10,30,20,20,10};//tableau pour verifier si le musicien a fais la bonne suite de touche
 	
 		int n;
 		int i = 0;
