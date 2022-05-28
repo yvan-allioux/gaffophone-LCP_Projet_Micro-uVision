@@ -8,7 +8,7 @@
 TO DO
 - bouton reset du scor
 - timer pour jouer une melodie
-- TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
+- TIM_UpdateMatchValue(LPC_TIM0,0,100000000); // OK
 - plusieur fichier
 
 */
@@ -149,33 +149,16 @@ void initTimer()
 	return;
 }
 
-
-
-//INITIALISATION DU TIMER POUR LA MUSIQUE
-/*void initTimerMusique()
-{
-	
-	TIM_TIMERCFG_Type timerMusique;
-	TIM_MATCHCFG_Type matchMusique;
-	timerMusique.PrescaleOption = TIM_PRESCALE_USVAL; 
-	timerMusique.PrescaleValue = precision ;
-	TIM_Init(LPC_TIM1,TIM_TIMER_MODE,&timerMusique);
-	matchMusique.MatchChannel = 0;
-	matchMusique.MatchValue = demie_periode;
-	matchMusique.IntOnMatch = ENABLE;
-	matchMusique.StopOnMatch = DISABLE;
-	matchMusique.ResetOnMatch = ENABLE;
-	matchMusique.ExtMatchOutputType = TIM_EXTMATCH_TOGGLE;
-	TIM_ConfigMatch(LPC_TIM1, &matchMusique);
-	NVIC_EnableIRQ(TIMER0_IRQn);
-	TIM_Cmd(LPC_TIM1, ENABLE);
-	
-	return;
-}*/
-
 //FONCTION APELE LOR DUNE INTERUPTION
 	void TIMER0_IRQHandler ()
 	{
+		
+			if (musiqueCounter >= 100000) {
+				musiqueCounter = 0;
+			}else{
+				musiqueCounter++;
+			}
+			
 		if ( (GPIO_ReadValue(1)& (1<<9)) == 0 ){//si gpio du buzer est a 1 l'etindre sinon l'alumer...
 				GPIO_SetValue(1, (1<<9));
 		}else{
@@ -249,35 +232,68 @@ uint16_t i2c_eeprom_write(uint16_t addr, uint8_t* data, int length)
 	
 }
 //JOUER UNE MUSIQUE
-/*
-void uneMusique(){
+void uneMusique(int time, int note){
 	int n;
 	//desactivation touch_read
 	//pas besoin de desactivation si on apelle la fonction quand on clic sur un endrois
+	TIM_Cmd(LPC_TIM0, ENABLE);
+	
+	musiqueCounter = 0;
 	
 	TIM_ResetCounter(LPC_TIM0);
-	TIM_UpdateMatchValue(LPC_TIM0,0,22);//DO
-	dessiner_rect(10,60,110,110,2,1,Black,Blue2);
-	n=sprintf(chaine,"DO");
-	LCD_write_english_string (60,110,chaine,Black,Blue2);
-	//timer 0.5 s ... utiliser un 2eme timer ???
-	dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
-	n=sprintf(chaine,"DO");
-	LCD_write_english_string (60,110,chaine,Black,Cyan);
 	
-	
-	TIM_ResetCounter(LPC_TIM0);
-	TIM_UpdateMatchValue(LPC_TIM0,0,21);//RE
+	switch(note)
+		{
+		case 10:
+TIM_UpdateMatchValue(LPC_TIM0,0,22);
+dessiner_rect(10,60,110,110,2,1,Black,Blue2);
+n=sprintf(chaine,"DO");
+LCD_write_english_string (60,110,chaine,Black,Blue2);
+while(musiqueCounter <= time){}
+dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
+n=sprintf(chaine,"DO");
+LCD_write_english_string (60,110,chaine,Black,Cyan);
+			break;
+		case 20:
+TIM_UpdateMatchValue(LPC_TIM0,0,21);
 	dessiner_rect(120,60,110,110,2,1,Black,Blue2);//RE
 	n=sprintf(chaine,"RE");
 	LCD_write_english_string (170,110,chaine,Black,Blue2);
-	//timer 0.5 s ... utiliser un 2eme timer ???
+while(musiqueCounter <= time){}
 	dessiner_rect(120,60,110,110,2,1,Black,Cyan);//RE
 	n=sprintf(chaine,"RE");
 	LCD_write_english_string (170,110,chaine,Black,Cyan);
-	
+			break;
+		case 30:
+TIM_UpdateMatchValue(LPC_TIM0,0,20);
+	dessiner_rect(10,170,110,110,2,1,Black,Blue2);//MI
+	n=sprintf(chaine,"MI");
+	LCD_write_english_string (60,210,chaine,Black,Blue2);
+while(musiqueCounter <= time){}
+	dessiner_rect(10,170,110,110,2,1,Black,Cyan);//MI
+	n=sprintf(chaine,"MI");
+	LCD_write_english_string (60,210,chaine,Black,Cyan);
+			break;
+		case 40:
+TIM_UpdateMatchValue(LPC_TIM0,0,18);
+	dessiner_rect(120,170,110,110,2,1,Black,Blue2);//FA
+	n=sprintf(chaine,"FA");
+	LCD_write_english_string (170,210,chaine,Black,Blue2);
+while(musiqueCounter <= time){}
+	dessiner_rect(120,170,110,110,2,1,Black,Cyan);//FA
+	n=sprintf(chaine,"FA");
+	LCD_write_english_string (170,210,chaine,Black,Cyan);
+			break;
+	case 50:
+		//rien
+			break;
+		default:
+
+
+			break;
+	}
 }
-*/
+
 
 //===========================================================//
 // Function: Main
@@ -292,13 +308,19 @@ int main(void)
 		int countTactilViolet;
 		int countTactilJauneLoad;
 		int countTactilReset;
+		int countTactilPlay;
 
 		int selectTactil;//variable qui permet de savoir quelle section du tactil est selectionée
 
+		int tabVerif[11] = {0,0,0,0,0,0,0,0,0,0,0};
+		int clerDeLaLune[11] = {10,10,10,20,30,20,10,30,20,20,10};
+	
 		int n;
+		int i = 0;
 
 		uint8_t varMemoire = 0;//variable qui compte le nombre de notte enclanchèe , utulisée avec la memoire flash
-
+		
+		musiqueCounter = 0;
 
 		selectTactil = 0;
 
@@ -309,12 +331,13 @@ int main(void)
 		countTactilViolet = 0;
 		countTactilJauneLoad = 0;
 		countTactilReset = 0;
+		countTactilPlay = 0;
 
 
 		initPinConnectBloc();//initialisation gpio pin conecteur bloc ...
 		initTimer(); //initialisation du timer 0
 
-		TIM_UpdateMatchValue(LPC_TIM0,0,30);//modification du match value du timer 0 a la volée pour changer la fréquence de la musique
+		TIM_UpdateMatchValue(LPC_TIM0,0,100000000);//modification du match value du timer 0 a la volée pour changer la fréquence de la musique
 
 		init_i2c();//initialisation de l'i2c
 
@@ -322,7 +345,7 @@ int main(void)
 
 		//titre
 		n=sprintf(chaine,"gaffophone V0.47 yvan");
-		LCD_write_english_string (32,30,chaine,White,Blue);
+		LCD_write_english_string (32,34,chaine,White,Blue);
 
 		//save caré
 		dessiner_rect(0,0,30,30,2,1,Black,Magenta);
@@ -337,6 +360,13 @@ int main(void)
 		dessiner_rect(9+210,19,10,5,2,1,Black,Black);
 		n=sprintf(chaine,"load");
 		LCD_write_english_string (175,7,chaine,Black,Blue);
+		
+		//play caré
+		dessiner_rect(0+104,0,30,30,2,1,Black,Cyan);
+		dessiner_rect(9+104,8,8,13,2,1,Black,Black);
+		dessiner_rect(18+104,11,3,7,2,1,Black,Black);
+		n=sprintf(chaine,"p");
+		LCD_write_english_string (9+104,7,chaine,White,Black);
 
 		//carée touche de musique 
 		dessiner_rect(10,60,110,110,2,1,Black,Cyan);//DO
@@ -359,8 +389,10 @@ int main(void)
 
 		
 		TIM_ResetCounter(LPC_TIM0);//reset du timer car si on ne le fais pas et que on diminue la taille du match value cela peut faire crash le timer
-		TIM_UpdateMatchValue(LPC_TIM0,0,100000000);//on stop le bruir en metant une periode très longue (pas propre comme methode mais bon ...)
-
+		//TIM_UpdateMatchValue(LPC_TIM0,0,100000000);//on stop le bruir en metant une periode très longue (pas propre comme methode mais bon ...)
+		TIM_Cmd(LPC_TIM0, DISABLE);
+		//TIM_Cmd(LPC_TIM0, ENABLE);
+		uneMusique(100,40);
 		GPIO_SetDir(0, (1<<0), 0); //la led est eteinte quand linitialisation est terminer
 		
     while(1){
@@ -372,7 +404,7 @@ int main(void)
 			if(((touch_x > 600) && (touch_x < 2000)) && ((touch_y > 2000) && (touch_y < 3000))){//jaune
 				countTactilJaune++;
 				if(selectTactil != 10 && countTactilJaune > countTactilCouleur){
-					
+					TIM_Cmd(LPC_TIM0, ENABLE);
 					selectTactil = 10;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,22);//DO
@@ -385,7 +417,7 @@ int main(void)
 			}else if(((touch_x > 2100) && (touch_x < 3600)) && ((touch_y > 2000) && (touch_y < 3000))){//vert
 				countTactilVert++;
 				if(selectTactil != 20 && countTactilVert > countTactilCouleur){
-					
+					TIM_Cmd(LPC_TIM0, ENABLE);
 					selectTactil = 20;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,21);//RE
@@ -398,7 +430,7 @@ int main(void)
 			}else if(((touch_x > 600) && (touch_x < 2000)) && ((touch_y > 700) && (touch_y < 1800))){//bleu
 				countTactilBleu++;
 				if(selectTactil != 30 && countTactilBleu > countTactilCouleur){
-					
+					TIM_Cmd(LPC_TIM0, ENABLE);
 					selectTactil = 30;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,20);//MI
@@ -411,7 +443,7 @@ int main(void)
 			}else if(((touch_x > 2100) && (touch_x < 3600)) && ((touch_y > 700) && (touch_y < 1800))){//rouge
 				countTactilRouge++;
 				if(selectTactil != 40 && countTactilRouge > countTactilCouleur){
-					
+					TIM_Cmd(LPC_TIM0, ENABLE);
 					selectTactil = 40;
 					TIM_ResetCounter(LPC_TIM0);
 					TIM_UpdateMatchValue(LPC_TIM0,0,18);//FA
@@ -447,6 +479,47 @@ int main(void)
 					countTactilReset = 0;
 					varMemoire = 0;//reset du compteur
 				}
+				}else if(((touch_x > 1850) && (touch_x < 2450)) && ((touch_y > 3300) && (touch_y < 3800))){//PLAY
+				countTactilPlay++;
+				if(selectTactil != 90 && countTactilPlay > countTactilCouleur){
+					
+					for (i = 0; i < 11; ++i){
+						if(tabVerif[i] != clerDeLaLune[i]){
+							n=sprintf(chaine,"gaffophone NON VALIDE ");
+							LCD_write_english_string (32,34,chaine,Red,Blue);
+							break;
+						}else{
+							if(i == 10){
+								n=sprintf(chaine,"gaffophone VALIDE     ");
+								LCD_write_english_string (32,34,chaine,Green,Blue);
+							}
+						}
+						
+					}
+					
+					GPIO_SetDir(0, (1<<0), 1);
+					
+					//au cler de la lune 11 note
+					uneMusique(300,10);
+					uneMusique(300,10);
+					uneMusique(300,10);
+					uneMusique(300,20);
+					uneMusique(600,30);
+					uneMusique(500,20);
+					uneMusique(300,10);
+					uneMusique(300,30);
+					uneMusique(300,20);
+					uneMusique(300,20);
+					uneMusique(500,10);
+					
+					for (i = 0; i < 10; ++i){
+							tabVerif[i] = 0;
+					}
+					
+					GPIO_SetDir(0, (1<<0), 0);
+					selectTactil = 90;
+					countTactilPlay = 0;
+				}
 			}else{
 				if(selectTactil != 50){//pour ne passer que 1 fois ici quand on ne touche pas l'ecrant (detecte le levée de doit en gros)
 					switch(selectTactil)//pour ne reaficher la couleur originale que d'un carée
@@ -456,24 +529,49 @@ int main(void)
 						n=sprintf(chaine,"DO");
 						LCD_write_english_string (60,110,chaine,Black,Cyan);
 					varMemoire++;
+					for (i = 0; i < 11; ++i){
+						if(tabVerif[i] == 0){
+							tabVerif[i] = 10;
+							break;
+						}
+					}
+						
 						break;
 					case 20:
 						dessiner_rect(120,60,110,110,2,1,Black,Cyan);//RE
 						n=sprintf(chaine,"RE");
 						LCD_write_english_string (170,110,chaine,Black,Cyan);
 					varMemoire++;
+					for (i = 0; i < 11; ++i){
+						if(tabVerif[i] == 0){
+							tabVerif[i] = 20;
+							break;
+						}
+					}
 						break;
 					case 30:
 						dessiner_rect(10,170,110,110,2,1,Black,Cyan);//MI
 						n=sprintf(chaine,"MI");
 						LCD_write_english_string (60,210,chaine,Black,Cyan);
 					varMemoire++;
+					for (i = 0; i < 11; ++i){
+						if(tabVerif[i] == 0){
+							tabVerif[i] = 30;
+							break;
+						}
+					}
 						break;
 					case 40:
 						dessiner_rect(120,170,110,110,2,1,Black,Cyan);//FA
 						n=sprintf(chaine,"FA");
 						LCD_write_english_string (170,210,chaine,Black,Cyan);
 					varMemoire++;
+					for (i = 0; i < 11; ++i){
+						if(tabVerif[i] == 0){
+							tabVerif[i] = 40;
+							break;
+						}
+					}
 						break;
 					case 60://violet
 						dessiner_rect(7,0,15,15,2,1,Black,White);
@@ -490,7 +588,8 @@ int main(void)
 					LCD_write_english_string (60,290,chaine,Black,Blue);
 					
 					TIM_ResetCounter(LPC_TIM0);
-					TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
+					//TIM_UpdateMatchValue(LPC_TIM0,0,100000000);
+					TIM_Cmd(LPC_TIM0, DISABLE);
 					
 					selectTactil = 0;
 					countTactilJaune = 0;
