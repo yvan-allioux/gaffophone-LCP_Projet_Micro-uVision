@@ -344,7 +344,7 @@ int main(void)
 		lcd_Initializtion(); // init pinsel ecran et init LCD
 
 		//titre
-		n=sprintf(chaine,"gaffophone V0.47 yvan");
+		n=sprintf(chaine,"gaffophone V1.0 yvan");
 		LCD_write_english_string (32,34,chaine,White,Blue);
 
 		//save caré
